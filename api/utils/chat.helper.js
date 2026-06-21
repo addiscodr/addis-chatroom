@@ -3,6 +3,5 @@ export const getRoomId = (user1, user2) => {
 };
 
 getRoomId('userA', 'userB');
-return userA_userB;
+
 getRoomId('userB', 'userA');
-return userB_userA;

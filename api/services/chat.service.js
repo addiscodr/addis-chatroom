@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import message from '../models/message.js';
 import { getRoomId } from '../utils/chat.helper.js';
 import User from '../models/user.js';
+const ObjectId = mongoose.Types.ObjectId;
 
 export const createMessage = async (messageData) => {
   try {
@@ -51,7 +52,7 @@ export const fetchChatMessages = async ({
       }
     }
 
-    const messages = await Message.aggregate(
+    const messages = await Message.aggregate([
       {
         $match: query,
       },
@@ -71,7 +72,7 @@ export const fetchChatMessages = async ({
           },
         },
       },
-    );
+    ]);
 
     return messages.reverse();
   } catch (error) {
@@ -107,7 +108,7 @@ export const getUndeliveredMessages = async (userId, partnerId) => {
 
 export const updateUserLastSeen = async (userId, lastSeen) => {
   try {
-    const user = await User.findOneAndUpdate(
+    const user = await User.findByIdAndUpdate(
       userId,
       { lastSeen: lastSeen },
       { new: true },
@@ -209,6 +210,7 @@ export const chatRoom = async (userId) => {
           },
           latestMessageTime: { $first: '$createdAt' },
           latestMessage: { $first: '$message' },
+          latestMessageId: { $first: '$_id' },
           sender: { $first: '$sender' },
           messages: {
             $push: {
@@ -240,11 +242,11 @@ export const chatRoom = async (userId) => {
           userId: '$userDetails._id',
           latestMessageTime: 1,
           latestMessage: 1,
-          senderId: 1,
+          sender: 1,
           unreadCount: {
             $size: {
               $filter: {
-                input: '$message',
+                input: '$messages',
                 as: 'msg',
                 cond: {
                   $and: [
